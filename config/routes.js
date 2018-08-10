@@ -29,7 +29,7 @@ function register(req, res) {
         .first()
         .then(user => {
           const token = generateToken(user);
-          res.status(201).json(token);
+          res.status(201).json({ token, user });
         })
         .catch(err => {
           throw err;
@@ -40,6 +40,20 @@ function register(req, res) {
 
 function login(req, res) {
   // implement user login
+  const credentials = req.body;
+
+  db('users')
+    .where({ username: credentials.username })
+    .first()
+    .then(user => {
+      if (!user || bcrypt.compareSync(user.password, credentials.password)) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const token = generateToken(user);
+      res.status(200).json({ token, user });
+    })
+    .catch(err => res.status(500).json(err));
 }
 
 function getJokes(req, res) {
